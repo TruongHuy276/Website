@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  /* Thiết lập nền cho tệp chạy độc lập */
+  :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<title>Trang Chào Mừng</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;800&display=swap">
+<style>
+  /* Bố cục: trang chúc mừng đơn giản phía sau, khung cửa sổ chọn Nam / Nữ nổi ở giữa khi vào trang.
+     Chọn xong thì khung đóng lại và cả trang đổi màu, lời mở đầu và nội dung theo lựa chọn
+     (thuộc tính data-choice trên thẻ gốc quyết định bảng màu). */
+  :root {
+    --bg: #eff4f6; --surface: #ffffff; --fg: #11222b; --muted: #53646d; --line: #d3dee3;
+    --accent: #0b7a69; --accent-soft: #d9f0eb;
+    --overlay: rgba(17, 34, 43, 0.58);
+    --c-nam: #0a5f9e; --c-nam-soft: #d6e8f6; --bg-nam: #e8f1f8; --surface-nam: #ffffff; --line-nam: #c8dbe9;
+    --c-nu: #b3245f; --c-nu-soft: #f8d9e6; --bg-nu: #fbeef3; --surface-nu: #ffffff; --line-nu: #ecd0dc;
+    --font: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d181e; --surface: #15252d; --fg: #e8f0f2; --muted: #9fb2ba; --line: #28404a;
+      --accent: #3fc9b0; --accent-soft: #12363a; --overlay: rgba(0, 0, 0, 0.68);
+      --c-nam: #6dbbf2; --c-nam-soft: #123552; --bg-nam: #0a1822; --surface-nam: #112331; --line-nam: #25415a;
+      --c-nu: #f28fb9; --c-nu-soft: #4a1d33; --bg-nu: #1d0f17; --surface-nu: #2a1621; --line-nu: #4a2a3a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d181e; --surface: #15252d; --fg: #e8f0f2; --muted: #9fb2ba; --line: #28404a;
+    --accent: #3fc9b0; --accent-soft: #12363a; --overlay: rgba(0, 0, 0, 0.68);
+    --c-nam: #6dbbf2; --c-nam-soft: #123552; --bg-nam: #0a1822; --surface-nam: #112331; --line-nam: #25415a;
+    --c-nu: #f28fb9; --c-nu-soft: #4a1d33; --bg-nu: #1d0f17; --surface-nu: #2a1621; --line-nu: #4a2a3a;
+    color-scheme: dark;
+  }
+  /* Bảng màu theo lựa chọn: chỉ gán lại token, mọi thành phần tự đổi theo */
+  :root[data-choice="nam"] { --bg: var(--bg-nam); --surface: var(--surface-nam); --line: var(--line-nam); --accent: var(--c-nam); --accent-soft: var(--c-nam-soft); }
+  :root[data-choice="nu"] { --bg: var(--bg-nu); --surface: var(--surface-nu); --line: var(--line-nu); --accent: var(--c-nu); --accent-soft: var(--c-nu-soft); }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font);
+    font-size: 16px; line-height: 1.6; padding-block: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    transition: background-color .5s ease, color .3s ease;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 20px; }
+  .brand { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.01em; }
+  .brand span { color: var(--accent); transition: color .5s ease; }
+  .change {
+    font: inherit; font-size: 0.9rem; font-weight: 500; color: var(--fg); background: transparent;
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  }
+  .change:hover { border-color: var(--accent); color: var(--accent); }
+
+  .hero { padding-block: 44px 28px; max-width: 680px; }
+  .eyebrow { display: inline-block; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; transition: color .5s ease; }
+  .hero h1 { font-size: clamp(2rem, 6vw, 3.3rem); line-height: 1.1; font-weight: 800; letter-spacing: -0.025em; margin: 0 0 16px; text-wrap: balance; }
+  .hero p { margin: 0; color: var(--muted); font-size: 1.05rem; max-width: 56ch; }
+  .countdown { display: inline-block; margin-top: 18px; font-weight: 600; font-size: 0.95rem; padding: 8px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); transition: background-color .5s ease, color .5s ease; }
+
+  #result { padding-block: 8px 64px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 28px; animation: rise .45s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .panel .tag { display: inline-block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; margin-bottom: 14px; background: var(--accent-soft); color: var(--accent); }
+  .panel h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.015em; margin: 0 0 10px; text-wrap: balance; }
+  .panel > p { margin: 0 0 20px; color: var(--muted); max-width: 62ch; }
+  .points { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 0; padding: 0; list-style: none; }
+  .points li { border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .points strong { font-weight: 600; }
+  .points .body { color: var(--muted); font-size: 0.93rem; flex: 1; }
+  .copy {
+    align-self: flex-start; margin-top: 6px; font: inherit; font-size: 0.82rem; font-weight: 500; color: var(--accent);
+    background: transparent; border: 1px solid var(--line); border-radius: 7px; padding: 5px 11px; cursor: pointer;
+  }
+  .copy:hover { border-color: var(--accent); }
+
+  /* Tường ảnh: mỗi ảnh là một khung giấy, vị trí và góc nghiêng được JS gán ngẫu nhiên */
+  .photos { position: absolute; top: 0; left: 0; width: 100%; height: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+  .shot {
+    position: absolute; margin: 0; width: 180px; padding: 8px; min-width: 0; pointer-events: auto;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.2);
+    transform: rotate(var(--r, 0deg));
+    transition: transform .25s ease, box-shadow .25s ease;
+    animation: fadein .5s ease both;
+  }
+  .shot img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 3px; }
+  .shot:hover { transform: rotate(0deg) scale(1.06); z-index: 2; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3); }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Khung cửa sổ */
+  .backdrop {
+    position: fixed; inset: 0; z-index: 20; background: var(--overlay);
+    display: flex; align-items: center; justify-content: center; overflow-y: auto;
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .modal { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; width: 100%; max-width: 520px; padding: 28px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); margin: auto; }
+  .modal h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.015em; margin: 0 0 6px; text-wrap: balance; }
+  .modal > p { margin: 0 0 22px; color: var(--muted); }
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .choice {
+    font: inherit; font-weight: 800; font-size: 1.5rem; text-align: center; color: var(--fg); background: var(--bg);
+    border: 2px solid var(--line); border-radius: 14px; padding: 32px 16px; cursor: pointer; min-width: 0;
+    transition: border-color .15s, transform .15s, color .15s, background-color .15s;
+  }
+  .choice:hover, .choice:focus-visible { transform: translateY(-2px); }
+  .choice[data-choice="nam"]:hover, .choice[data-choice="nam"]:focus-visible { border-color: var(--c-nam); color: var(--c-nam); background: var(--c-nam-soft); }
+  .choice[data-choice="nu"]:hover, .choice[data-choice="nu"]:focus-visible { border-color: var(--c-nu); color: var(--c-nu); background: var(--c-nu-soft); }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 480px) { .modal, .panel { padding: 22px; } .choice { padding: 26px 12px; } }
+  @media (prefers-reduced-motion: reduce) {
+    body, .brand span, .eyebrow, .countdown, .choice { transition: none; }
+    .panel, .shot { animation: none; }
+    .shot { transition: none; }
+    .choice:hover, .choice:focus-visible { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="photos" id="photos"></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Ngày <span>19/11</span></div>
+    <button class="change" id="change" type="button">Đổi lựa chọn</button>
+  </header>
+
+  <section class="hero">
+    <h1 id="hero-title">Chúc mừng Ngày Quốc tế Nam giới 19/11</h1>
+    <p id="hero-text">Hôm nay là ngày của chúng ta.</p>
+  </section>
+
+  <section id="result" aria-live="polite"></section>
+</div>
+
+<div class="backdrop" id="backdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h2 id="modal-title">Bạn là nam hay nữ?</h2>
+    <p>Chọn một lựa chọn để tiếp tục.</p>
+    <div class="choices">
+      <button class="choice" type="button" data-choice="nam" id="choice-nam">Nam</button>
+      <button class="choice" type="button" data-choice="nu" id="choice-nu">Nữ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var CONTENT = {
+    nam: {
+      eyebrow: "Dành cho anh em",
+      heroTitle: "Chúc mừng ông nhân Ngày Quốc tế Nam giới 19/11",
+      heroText: "Thật đáng respect cho những nỗ lực của bro , những việc ông làm cho gia đình , bạn bè (cả ny nữa ) và công việc. Hôm nay là ngày để anh em chúng ta tạm nghỉ và tri ân phái nam.",
+      images: [
+        { src: "img/nam-1.jpg", pos: "30% 0%" },
+        { src: "img/nam-2.jpg", pos: "50% 25%" },
+        { src: "img/nam-3.jpg", pos: "50% 40%" },
+        { src: "img/nam-4.jpg", pos: "50% 30%" }
+      ],
+      title:"Nhân dịp ngày hôm nay tôi xin gửi lời chúc đến :",
+      points: [
+        { t: "Anh em", b: "Chúc các ông có một ngày 19/11 thật vui bên cạnh những người ông yêu thương , mong các ông về sau sẽ càng thành công hơn trong con đường nghiên cứu và học tập . Mong các ông sẽ đặt được những mục tiêu và gặt hái được những thành tựu của riêng mình . (Mà ai chưa có ny thì chúc các ông mau tìm được người mình thương nhá)" },
+        { t: "Các chú ,các bác ,các ông, các Thầy ", b: "Chúc mọi người luôn dồi dào sức khỏe , tinh thần minh mẫn , an vui bên vợ con ,con cháu và đạt được thêm nhiều thành công mới trên con đường sự nghiệp ."},
+        {t: "Chung", b: "Mong cánh đàn ông , nam giới chúng ta có một ngày 19/11 thật vui vẻ để củng cố tinh thần cũng nhau hướng tới cái Tết 2027 thật ngon nha !!!!!"},
+      ]
+    },
+    nu: {
+      eyebrow: "Gửi đến người đàn ông bên bạn",
+      heroTitle: "Hãy gửi một lời chúc nhân ngày 19/11",
+      heroText: "Không cần gì nhiều , chỉ cần một câu chúc ngắn gửi đến những người đàn ông trong cuộc sống của bạn là một cách cực peak để thể hiện tình cảm và sự trân trọng của bạn đối với họ UwU ",
+      tag: "Dành cho các chị em phụ nữ",
+      images: [
+        { src: "img/nu-1.jpg", pos: "50% 20%" },
+        { src: "img/nu-2.jpg", pos: "50% 30%" },
+        { src: "img/nu-3.jpg", pos: "50% 25%" },
+        { src: "img/nu-4.jpg", pos: "40% 10%" }
+      ],
+      title: "Đôi lời đến từ bản thân người viết",
+      points: [
+        { t:"Lời khuyên của tôi", b:"Ngày hôm nay có thể là một ngày chưa quá phổ biến và vẫn có nhiều người bỏ qua ,kể cả nam giới .Xã hội thường mặc định đàn ông phải mạnh mẽ, tự xoay sở và ít khi cần được dỗ dành hay chúc mừng.Nhưng đôi khi, với họ, việc cảm thấy mình được tôn trọng, được tin tưởng và đánh giá cao nhất là trong một ngày như 19/11 thật sự có ý nghĩ rất lớn đó ạ =)).Ý nghĩa cốt lõi của Ngày Quốc tế Nam giới gắn liền với việc chăm sóc sức khỏe thể chất và tinh thần cho phái mạnh. Vì vậy ngày hôm nay mong các chị em phụ nữ sẽ thể hiện sự trân trọng quan tâm nhiều hơn bình thường với chúng tôi đi ạ , và cư xử nhẹ nhàng , ân cần nhỏ nhẹ với những chàng trai , những người đàn ông bên cạnh bạn nhé !!! Chúng tôi chỉ cần như vậy là đủ rồi .", },
+        { t:"Lời nói chung", b :"Mong các chị em phụ nữ sẽ chung tay góp phần tạo nên một ngày 19/11 thật vui dành cho bọn tôi để củng cố tinh thần mọi người từ đó tạo nên bầu không khí hứng khởi để cùng nhau hướng tới cái Tết 2027 thật ngon nha !!!!!"},
+      ]
+    }
+  };
+
+  var root = document.documentElement;
+  var backdrop = document.getElementById("backdrop");
+  var result = document.getElementById("result");
+
+  function esc(s) { s = s == null ? "" : String(s); return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  function showCountdown() {
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var target = new Date(now.getFullYear(), 10, 19);
+    var days = Math.round((target - today) / 86400000);
+    var el = document.getElementById("countdown");
+    if (!el) return;
+    if (days > 0) el.textContent = "Còn " + days + " ngày nữa là đến 19/11";
+    else if (days === 0) el.textContent = "Hôm nay là ngày 19/11";
+    else {
+      var next = new Date(now.getFullYear() + 1, 10, 19);
+      el.textContent = "Còn " + Math.round((next - today) / 86400000) + " ngày nữa là đến 19/11 năm sau";
+    }
+  }
+
+  function rnd(min, max) { return min + Math.random() * (max - min); }
+
+  // Trang được chia thành 4 phần tư (trên-trái, trên-phải, dưới-trái, dưới-phải). Mỗi ảnh nhận một phần tư
+  // (xáo ngẫu nhiên mỗi lần chọn), rồi nằm ở một chỗ ngẫu nhiên trong phần tư đó, tránh đè lên chữ và ảnh khác.
+  // Vị trí thử (seed) được giữ nguyên khi đổi cỡ màn hình.
+  var photos = document.getElementById("photos");
+  var wrapEl = document.querySelector(".wrap");
+  var photoState = [];
+
+  function setPhotos(images) {
+    photos.innerHTML = "";
+    photoState = [];
+    wrapEl.style.paddingTop = "";
+    result.style.paddingBottom = "";
+    photos.style.height = "0px";
+    if (!images || !images.length) return;
+    var corners = [0, 1, 2, 3]; // 0 trên-trái, 1 trên-phải, 2 dưới-trái, 3 dưới-phải
+    for (var k = corners.length - 1; k > 0; k--) {
+      var j = Math.floor(Math.random() * (k + 1));
+      var tmp = corners[k]; corners[k] = corners[j]; corners[j] = tmp;
+    }
+    photoState = images.map(function (_, i) {
+      var seeds = [];
+      for (var n = 0; n < 160; n++) seeds.push([Math.random(), Math.random()]);
+      return { corner: i < 4 ? corners[i] : Math.floor(Math.random() * 4), seeds: seeds, r: rnd(-12, 12) };
+    });
+    photos.innerHTML = images.map(function (im, i) {
+      return '<figure class="shot" style="--r:' + photoState[i].r.toFixed(1) + "deg;animation-delay:" + (i * 90) + 'ms"><img src="' + im.src + '" alt="Ảnh ' + (i + 1) + ' trong bộ ảnh" style="object-position:' + im.pos + '"></figure>';
+    }).join("");
+    layoutPhotos();
+  }
+
+  function pageRect(el) {
+    var b = el.getBoundingClientRect();
+    return { l: b.left + window.pageXOffset, t: b.top + window.pageYOffset, r: b.right + window.pageXOffset, b: b.bottom + window.pageYOffset };
+  }
+
+  function overlap(a, b) {
+    var w = Math.min(a.r, b.r) - Math.max(a.l, b.l);
+    var h = Math.min(a.b, b.b) - Math.max(a.t, b.t);
+    return w > 0 && h > 0 ? w * h : 0;
+  }
+
+  function layoutPhotos() {
+    if (!photoState.length) return;
+    var vw = document.documentElement.clientWidth;
+    var iw = vw < 600 ? 118 : 175;
+    var ih = (iw - 16) * 1.25 + 18;
+    // dải trống phía trên và phía dưới nội dung để màn hình hẹp vẫn có chỗ đặt ảnh
+    wrapEl.style.paddingTop = Math.round(ih * 0.9 + 30) + "px";
+    result.style.paddingBottom = Math.round(ih * 1.1 + 40) + "px";
+    photos.style.height = "0px";
+    var H = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+    photos.style.height = H + "px";
+
+    var avoid = [
+      { rect: pageRect(document.querySelector(".hero")), w: 3 },
+      { rect: pageRect(document.querySelector(".brand")), w: 3 },
+      { rect: pageRect(document.getElementById("change")), w: 3 }
+    ];
+    var panel = document.querySelector(".panel");
+    if (panel) avoid.push({ rect: pageRect(panel), w: 0.5 });
+
+    var placed = [];
+    photoState.forEach(function (s, i) {
+      var el = photos.children[i];
+      el.style.width = iw + "px";
+      var right = s.corner % 2 === 1, bottom = s.corner >= 2;
+      var x0 = right ? vw / 2 - iw * 0.5 : -iw * 0.1;
+      var x1 = right ? vw - iw * 0.9 : vw / 2 - iw * 0.5;
+      var y0 = bottom ? H / 2 - ih * 0.5 : 8;
+      var y1 = bottom ? H - ih - 8 : H / 2 - ih * 0.5;
+      var best = null, good = [];
+      s.seeds.forEach(function (sd) {
+        var x = x0 + sd[0] * Math.max(0, x1 - x0);
+        var y = y0 + sd[1] * Math.max(0, y1 - y0);
+        var box = { l: x - 10, t: y - 10, r: x + iw + 10, b: y + ih + 10 };
+        var pen = 0;
+        avoid.forEach(function (a) { pen += overlap(box, a.rect) * a.w; });
+        placed.forEach(function (p) { pen += overlap(box, p) * 3; });
+        var rel = pen / (iw * ih);
+        var c = { x: x, y: y, pen: rel, box: box };
+        if (!best || rel < best.pen) best = c;
+        if (rel < 0.03) good.push(c);
+      });
+      var pick = good.length ? good[Math.floor(good.length * s.seeds[0][0])] : best;
+      el.style.left = Math.round(pick.x) + "px";
+      el.style.top = Math.round(pick.y) + "px";
+      placed.push(pick.box);
+    });
+  }
+
+  // Gán chữ cho một phần tử, bỏ qua nếu phần tử hoặc nội dung không có
+  function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el && value != null) el.textContent = value;
+  }
+
+  function openModal() {
+    backdrop.hidden = false;
+    document.getElementById("choice-nam").focus();
+  }
+
+  function choose(key) {
+    var c = CONTENT[key];
+    root.setAttribute("data-choice", key);
+    setText("hero-eyebrow", c.eyebrow);
+    setText("hero-title", c.heroTitle);
+    setText("hero-text", c.heroText);
+    var items = (c.points || []).map(function (p, i) {
+      return "<li><strong>" + esc(p.t) + '</strong><span class="body" id="wish-' + i + '">' + esc(p.b) + "</span>" +
+        (p.copy ? '<button class="copy" type="button" data-target="wish-' + i + '">Sao chép</button>' : "") + "</li>";
+    }).join("");
+    result.innerHTML =
+      '<div class="panel">' +
+      (c.tag ? '<span class="tag">' + esc(c.tag) + "</span>" : "") +
+      (c.title ? "<h2>" + esc(c.title) + "</h2>" : "") +
+      (c.text ? "<p>" + esc(c.text) + "</p>" : "") +
+      '<ul class="points">' + items + "</ul></div>";
+    setPhotos(c.images);
+    backdrop.hidden = true;
+  }
+
+  function selectText(el) {
+    var r = document.createRange();
+    r.selectNodeContents(el);
+    var s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+
+  result.addEventListener("click", function (e) {
+    var btn = e.target.closest(".copy");
+    if (!btn) return;
+    var el = document.getElementById(btn.getAttribute("data-target"));
+    function done() { btn.textContent = "Đã sao chép"; setTimeout(function () { btn.textContent = "Sao chép"; }, 1800); }
+    try {
+      navigator.clipboard.writeText(el.textContent).then(done, function () { selectText(el); btn.textContent = "Đã chọn, hãy sao chép"; });
+    } catch (err) { selectText(el); btn.textContent = "Đã chọn, hãy sao chép"; }
+  });
+
+  document.getElementById("choice-nam").addEventListener("click", function () { choose("nam"); });
+  document.getElementById("choice-nu").addEventListener("click", function () { choose("nu"); });
+  document.getElementById("change").addEventListener("click", openModal);
+  window.addEventListener("resize", layoutPhotos);
+  window.addEventListener("load", layoutPhotos);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutPhotos);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !backdrop.hidden && result.innerHTML) backdrop.hidden = true;
+  });
+
+  showCountdown();
+  document.getElementById("choice-nam").focus();
+</script>
+</body>
+</html>
