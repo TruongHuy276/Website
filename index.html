@@ -321,6 +321,53 @@
   }
 
   function choose(key) {
+     // ===== Hiệu ứng pháo giấy: dán đoạn này ngay phía trên dòng "function choose(key) {" =====
+  function confetti(colors) {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var cv = document.createElement("canvas");
+    cv.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50";
+    document.body.appendChild(cv);
+    var ctx = cv.getContext("2d");
+    var dpr = window.devicePixelRatio || 1;
+    var W = cv.width = Math.round(window.innerWidth * dpr);
+    var H = cv.height = Math.round(window.innerHeight * dpr);
+    var parts = [];
+
+    // x, y: nơi bắn ra; n: số mảnh; dir: 1 bắn chéo sang phải, -1 bắn chéo sang trái
+    function burst(x, y, n, dir) {
+      for (var i = 0; i < n; i++) {
+        var a = -Math.PI / 2 + dir * 0.5 + (Math.random() - 0.5) * 1.2;
+        var v = (8 + Math.random() * 12) * dpr;
+        parts.push({
+          x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+          w: (6 + Math.random() * 6) * dpr, h: (4 + Math.random() * 5) * dpr,
+          rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.4,
+          c: colors[Math.floor(Math.random() * colors.length)], life: 0
+        });
+      }
+    }
+    burst(W * 0.1, H * 0.95, 90, 1);   // bắn từ góc dưới trái
+    burst(W * 0.9, H * 0.95, 90, -1);  // bắn từ góc dưới phải
+
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      parts.forEach(function (p) {
+        p.vy += 0.35 * dpr; p.vx *= 0.99; p.vy *= 0.99;
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life++;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = Math.max(0, 1 - p.life / 160);
+        ctx.fillStyle = p.c;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+      parts = parts.filter(function (p) { return p.life < 160 && p.y < H + 50; });
+      if (parts.length) requestAnimationFrame(frame); else cv.remove();
+    }
+    frame();
+  }
+
     var c = CONTENT[key];
     root.setAttribute("data-choice", key);
     setText("hero-eyebrow", c.eyebrow);
@@ -337,6 +384,7 @@
       (c.text ? "<p>" + esc(c.text) + "</p>" : "") +
       '<ul class="points">' + items + "</ul></div>";
     setPhotos(c.images);
+    confetti(key === "nam" ? ["#6dbbf2", "#0a5f9e", "#ffd166", "#ffffff"] : ["#f28fb9", "#b3245f", "#ffd166", "#ffffff"]);
     backdrop.hidden = true;
   }
 
